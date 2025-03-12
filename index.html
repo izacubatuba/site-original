@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Produtos Cadastrados</h1>
+        <a href="cadastro_produto.html" class="btn">Cadastrar Novo Produto</a>
+    </header>
+
+    <main>
+        <!-- Campo de Pesquisa -->
+        <input type="text" id="searchInput" placeholder="Pesquisar por nome ou código de barras...">
+        
+        <div id="productsContainer">
+            <!-- Os produtos serão carregados dinamicamente via JavaScript -->
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "http://127.0.0.1:5000/api"; // Ajuste se necessário
+
+        async function carregarProdutos() {
+            const container = document.getElementById("productsContainer");
+            let produtos = [];
+
+            try {
+                // Tenta buscar os produtos da API
+                const response = await fetch(`${API_URL}/produtos`);
+                if (!response.ok) throw new Error("API não disponível");
+                produtos = await response.json();
+
+                // Salva os produtos no localStorage para uso offline
+                localStorage.setItem("produtos", JSON.stringify(produtos));
+            } catch (error) {
+                console.error("Erro ao carregar produtos da API:", error);
+
+                // Carrega os produtos do LocalStorage caso a API não esteja disponível
+                const produtosSalvos = localStorage.getItem("produtos");
+                if (produtosSalvos) {
+                    produtos = JSON.parse(produtosSalvos);
+                } else {
+                    container.innerHTML = "<p>Nenhum produto encontrado.</p>";
+                    return;
+                }
+            }
+
+            renderizarProdutos(produtos);
+        }
+
+        function renderizarProdutos(produtos) {
+            const container = document.getElementById("productsContainer");
+            container.innerHTML = ""; // Limpa o container antes de renderizar novos produtos
+
+            if (produtos.length === 0) {
+                container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
+                return;
+            }
+
+            produtos.forEach(produto => {
+                const card = document.createElement("div");
+                card.classList.add("product-card");
+
+                card.innerHTML = `
+                    <img src="${produto.imagem || 'placeholder.jpg'}" alt="${produto.descricao_produto}">
+                    <h3>${produto.descricao_produto}</h3>
+                    <p class="codigo-barras">Código: ${produto.cod_barras}</p>
+                    <a href="editar_produto.html?codigoBarras=${produto.cod_barras}" class="btn-editar">Editar</a>
+                    <a href="#" class="btn-excluir" onclick="confirmarExclusao('${produto.cod_barras}')">Excluir</a>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function confirmarExclusao(codigo) {
+            if (confirm("Tem certeza que deseja excluir este produto?")) {
+                excluirProduto(codigo);
+            }
+        }
+
+        async function excluirProduto(codigo) {
+            let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+            produtos = produtos.filter(produto => produto.cod_barras !== codigo);
+            localStorage.setItem("produtos", JSON.stringify(produtos));
+
+            // Tenta excluir o produto da API
+            try {
+                const response = await fetch(`${API_URL}/produto/${codigo}`, { method: "DELETE" });
+                if (response.ok) {
+                    alert("Produto excluído com sucesso!");
+                } else {
+                    throw new Error("Erro ao excluir produto na API");
+                }
+            } catch (error) {
+                console.error("Erro ao excluir produto:", error);
+                alert("Produto removido localmente. API indisponível.");
+            }
+
+            carregarProdutos(); // Atualiza a lista após exclusão
+        }
+
+        document.getElementById("searchInput").addEventListener("input", function () {
+            const termoPesquisa = this.value.toLowerCase();
+            const produtos = document.querySelectorAll(".product-card");
+
+            let produtosVisiveis = 0;
+
+            produtos.forEach(produto => {
+                const nomeProduto = produto.querySelector("h3").textContent.toLowerCase();
+                const codigoBarras = produto.querySelector(".codigo-barras").textContent.toLowerCase();
+
+                if (nomeProduto.includes(termoPesquisa) || codigoBarras.includes(termoPesquisa)) {
+                    produto.style.display = "block";
+                    produtosVisiveis++;
+                } else {
+                    produto.style.display = "none";
+                }
+            });
+
+            const container = document.getElementById("productsContainer");
+            if (produtosVisiveis === 0) {
+                container.innerHTML = "<p>Nenhum produto encontrado.</p>";
+            }
+        });
+
+        window.onload = carregarProdutos; // Garantindo que a função seja chamada ao carregar a página
+    </script>
+</body>
+</html>

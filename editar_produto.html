@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Produto</title>
+    <link rel="stylesheet" href="cadastro-produto.css">
+</head>
+<body>
+    <header>
+        <h1>Editar Produto</h1>
+        <a href="index.html" class="btn voltar">Voltar para Produtos</a>
+    </header>
+
+    <main>
+        <form id="productForm">
+            <div class="form-group">
+                <label for="productName">Nome do Produto:</label>
+                <input type="text" id="productName" name="productName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productCode">Código de Barras:</label>
+                <input type="text" id="productCode" name="productCode" required readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="productImage">Imagem do Produto:</label>
+                <input type="file" id="productImage" name="productImage" accept="image/*">
+                <input type="text" id="productImageUrl" name="productImageUrl" placeholder="Ou insira o link da imagem">
+            </div>
+
+            <div class="form-group">
+                <label for="imageOption">Escolha o método para a imagem:</label>
+                <input type="radio" id="uploadOption" name="imageOption" value="upload" checked> Upload da Imagem
+                <input type="radio" id="linkOption" name="imageOption" value="link"> Inserir Link
+            </div>
+
+            <button type="submit" class="btn salvar">Salvar Alterações</button>
+        </form>
+    </main>
+
+    <script>
+        // Função para carregar o produto do LocalStorage
+        function carregarProduto() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codigoBarras = urlParams.get("codigoBarras");
+
+            if (!codigoBarras) {
+                alert("Código de barras não fornecido.");
+                return;
+            }
+
+            try {
+                console.log(`Buscando produto com código de barras: ${codigoBarras}`);
+                // Tenta buscar o produto no LocalStorage
+                const produtos = JSON.parse(localStorage.getItem("produtos"));
+
+                if (produtos) {
+                    const produto = produtos.find(prod => prod.cod_barras === codigoBarras);
+
+                    if (produto) {
+                        console.log("Produto carregado do LocalStorage:", produto);
+                        preencherFormulario(produto); // Preenche o formulário com os dados do LocalStorage
+                    } else {
+                        alert("Produto não encontrado no armazenamento local.");
+                    }
+                } else {
+                    alert("Nenhum produto encontrado no armazenamento local.");
+                }
+            } catch (error) {
+                console.error("Erro ao carregar produto do LocalStorage:", error);
+                alert("Erro ao carregar produto.");
+            }
+        }
+
+        // Função para preencher o formulário com os dados do produto
+        function preencherFormulario(produto) {
+            console.log("Preenchendo formulário com os dados:", produto);
+            document.getElementById("productName").value = produto.descricao_produto;
+            document.getElementById("productCode").value = produto.cod_barras;
+            document.getElementById("productImageUrl").value = produto.imagem || "";
+            document.getElementById(produto.imagem ? "linkOption" : "uploadOption").checked = true;
+        }
+
+        // Função para salvar as alterações do produto no LocalStorage
+        function salvarAlteracoes(event) {
+            event.preventDefault(); // Previne o comportamento padrão do formulário
+
+            const descricao = document.getElementById("productName").value;
+            const codBarras = document.getElementById("productCode").value;
+            const imagem = document.getElementById("productImageUrl").value;
+
+            const produtoAtualizado = {
+                descricao_produto: descricao,
+                cod_barras: codBarras,
+                imagem: imagem || ""
+            };
+
+            try {
+                // Carrega todos os produtos do LocalStorage
+                const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+
+                // Atualiza ou adiciona o produto
+                const index = produtos.findIndex(prod => prod.cod_barras === codBarras);
+                if (index !== -1) {
+                    produtos[index] = produtoAtualizado; // Atualiza o produto existente
+                } else {
+                    produtos.push(produtoAtualizado); // Adiciona um novo produto
+                }
+
+                // Salva os produtos atualizados no LocalStorage
+                localStorage.setItem("produtos", JSON.stringify(produtos));
+                alert("Produto atualizado localmente!");
+                window.location.href = "index.html"; // Redireciona para a página inicial
+            } catch (e) {
+                console.error("Erro ao salvar no LocalStorage:", e);
+                alert("Erro ao salvar o produto. Tente novamente.");
+            }
+        }
+
+        // Chama a função para carregar o produto quando a página for carregada
+        document.addEventListener("DOMContentLoaded", carregarProduto);
+
+        // Adiciona o evento para salvar as alterações do formulário
+        document.getElementById("productForm").addEventListener("submit", salvarAlteracoes);
+    </script>
+</body>
+</html>

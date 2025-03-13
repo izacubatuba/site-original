@@ -22,14 +22,14 @@
     </main>
 
     <script>
-        const API_URL = "http://127.0.0.1:5000/api"; // Ajuste se necessário
+        const API_URL = "https://minha-api-produto.fly.dev/api"; // Atualizado para sua API
 
+        // Função para carregar produtos da API e atualizar a tela
         async function carregarProdutos() {
             const container = document.getElementById("productsContainer");
             let produtos = [];
 
             try {
-                // Tenta buscar os produtos da API
                 const response = await fetch(`${API_URL}/produtos`);
                 if (!response.ok) throw new Error("API não disponível");
                 produtos = await response.json();
@@ -39,7 +39,7 @@
             } catch (error) {
                 console.error("Erro ao carregar produtos da API:", error);
 
-                // Carrega os produtos do LocalStorage caso a API não esteja disponível
+                // Se a API estiver offline, carrega do localStorage
                 const produtosSalvos = localStorage.getItem("produtos");
                 if (produtosSalvos) {
                     produtos = JSON.parse(produtosSalvos);
@@ -52,9 +52,10 @@
             renderizarProdutos(produtos);
         }
 
+        // Renderiza os produtos na tela
         function renderizarProdutos(produtos) {
             const container = document.getElementById("productsContainer");
-            container.innerHTML = ""; // Limpa o container antes de renderizar novos produtos
+            container.innerHTML = ""; // Limpa antes de renderizar
 
             if (produtos.length === 0) {
                 container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
@@ -77,20 +78,23 @@
             });
         }
 
+        // Confirmação antes de excluir um produto
         function confirmarExclusao(codigo) {
             if (confirm("Tem certeza que deseja excluir este produto?")) {
                 excluirProduto(codigo);
             }
         }
 
+        // Função para excluir um produto
         async function excluirProduto(codigo) {
             let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
             produtos = produtos.filter(produto => produto.cod_barras !== codigo);
             localStorage.setItem("produtos", JSON.stringify(produtos));
 
-            // Tenta excluir o produto da API
+            // Tenta excluir na API
             try {
                 const response = await fetch(`${API_URL}/produto/${codigo}`, { method: "DELETE" });
+
                 if (response.ok) {
                     alert("Produto excluído com sucesso!");
                 } else {
@@ -104,6 +108,7 @@
             carregarProdutos(); // Atualiza a lista após exclusão
         }
 
+        // Filtragem de produtos ao digitar na pesquisa
         document.getElementById("searchInput").addEventListener("input", function () {
             const termoPesquisa = this.value.toLowerCase();
             const produtos = document.querySelectorAll(".product-card");
@@ -128,7 +133,15 @@
             }
         });
 
-        window.onload = carregarProdutos; // Garantindo que a função seja chamada ao carregar a página
+        // Atualiza a listagem de produtos automaticamente ao cadastrar um novo
+        window.addEventListener("storage", (event) => {
+            if (event.key === "produtos") {
+                carregarProdutos();
+            }
+        });
+
+        // Carrega os produtos ao abrir a página
+        window.onload = carregarProdutos;
     </script>
 </body>
 </html>

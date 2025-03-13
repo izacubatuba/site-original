@@ -6,39 +6,46 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f8f9fa;
     color: #333;
+    line-height: 1.6;
     text-align: center;
 }
 
+/* Cabeçalho */
 header {
     background-color: #007bff;
     color: white;
-    padding: 20px;
+    padding: 20px 0;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
     margin: 0;
-    font-size: 26px;
+    font-size: 28px;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
+/* Botões */
 .btn {
     display: inline-block;
-    margin-top: 10px;
     padding: 12px 20px;
     background-color: #28a745;
     color: white;
     text-decoration: none;
-    border-radius: 6px;
-    font-weight: bold;
-    transition: background 0.3s ease, transform 0.2s ease;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 .btn:hover {
     background-color: #218838;
     transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 /* Campo de pesquisa */
@@ -49,8 +56,9 @@ h1 {
     margin: 20px auto;
     border: 1px solid #ccc;
     border-radius: 6px;
+    font-size: 14px;
     box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
-    transition: 0.3s;
+    transition: 0.3s ease;
 }
 
 #searchInput:focus {
@@ -62,16 +70,17 @@ h1 {
 /* Container de produtos organizado em grade */
 #productsContainer {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Ajuste dinâmico */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 15px;
     padding: 20px;
     justify-items: center;
+    margin-top: 30px;
 }
 
 /* Cartão de produto */
 .product-card {
     background: white;
-    padding: 12px;
+    padding: 20px;
     border-radius: 12px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
@@ -80,8 +89,8 @@ h1 {
 }
 
 .product-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-8px);
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 /* Imagem do produto */
@@ -89,7 +98,7 @@ h1 {
     max-width: 100%;
     height: auto;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     transition: transform 0.3s ease;
 }
 
@@ -99,15 +108,18 @@ h1 {
 
 /* Nome do produto */
 .product-card h3 {
-    font-size: 16px;
+    font-size: 18px;
     margin: 10px 0;
+    font-weight: 500;
+    color: #333;
 }
 
 /* Código de Barras */
 .codigo-barras {
-    font-size: 13px;
+    font-size: 14px;
     color: #555;
     margin-bottom: 8px;
+    font-style: italic;
 }
 
 /* Botões de editar e excluir */
@@ -115,12 +127,12 @@ h1 {
 .product-card .btn-excluir {
     display: inline-block;
     margin-top: 10px;
-    padding: 8px 14px;
+    padding: 8px 16px;
     color: white;
     text-decoration: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
     transition: background 0.3s ease, transform 0.2s ease;
 }
 
@@ -145,22 +157,19 @@ h1 {
 /* Responsividade para telas menores */
 @media (max-width: 768px) {
     h1 {
-        font-size: 22px;
+        font-size: 24px;
     }
 
-    /* Ajusta o botão para telas médias */
     .btn {
         padding: 10px 15px;
     }
 
-    /* Ajuste do cartão de produto para telas médias */
     .product-card {
-        padding: 10px;
+        padding: 15px;
     }
 
-    /* Ajuste do título e código de barras no cartão para telas médias */
     .product-card h3 {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .codigo-barras {
@@ -169,25 +178,21 @@ h1 {
 }
 
 @media (max-width: 480px) {
-    /* Ajusta o título na tela pequena */
     h1 {
-        font-size: 20px;
+        font-size: 22px;
     }
 
-    /* Ajusta o campo de pesquisa */
     #searchInput {
         width: 85%;
         padding: 10px;
     }
 
-    /* Ajustes nos cartões para uma tela muito pequena */
     .product-card {
-        padding: 8px;
+        padding: 12px;
     }
 
-    /* Tamanho do título e código de barras no cartão em tela muito pequena */
     .product-card h3 {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .codigo-barras {

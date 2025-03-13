@@ -11,13 +11,9 @@ async function carregarProdutos() {
         if (!response.ok) throw new Error("API não disponível");
         produtos = await response.json();
 
-        // Verifica se os produtos da API são diferentes dos do LocalStorage
-        const produtosSalvos = JSON.parse(localStorage.getItem("produtos")) || [];
-        if (JSON.stringify(produtosSalvos) !== JSON.stringify(produtos)) {
-            // Atualiza o LocalStorage com os produtos da API
-            localStorage.setItem("produtos", JSON.stringify(produtos));
-            alert("Todos os produtos foram salvos localmente. Agora você pode desligar a API.");
-        }
+        // Atualiza o LocalStorage com os produtos da API
+        localStorage.setItem("produtos", JSON.stringify(produtos));
+        alert("Todos os produtos foram salvos localmente. Agora você pode desligar a API.");
     } catch (error) {
         console.error("Erro ao carregar produtos da API:", error);
 
@@ -34,5 +30,23 @@ async function carregarProdutos() {
     // Após os produtos serem carregados, remove a mensagem de carregamento
     loadingMessage.style.display = "none";
     
+    // Garantir que os produtos não sejam duplicados antes de renderizar
+    produtos = removerDuplicados(produtos);
+
     renderizarProdutos(produtos);  // Função para renderizar os produtos na tela
+}
+
+// Função para remover duplicados de produtos com base no código de barras
+function removerDuplicados(produtos) {
+    const produtosUnicos = [];
+    const codigosBarras = new Set();
+
+    produtos.forEach(produto => {
+        if (!codigosBarras.has(produto.cod_barras)) {
+            produtosUnicos.push(produto);
+            codigosBarras.add(produto.cod_barras);
+        }
+    });
+
+    return produtosUnicos;
 }

@@ -94,10 +94,13 @@
                 const card = document.createElement("div");
                 card.classList.add("product-card");
 
+                // Formatar código de barras para remover ponto flutuante
+                const codigoBarras = produto.cod_barras.toString().split('.')[0]; // Remove a parte decimal, se houver
+
                 card.innerHTML = `
                     <img src="${produto.imagem || 'placeholder.jpg'}" alt="${produto.descricao_produto}">
                     <h3>${produto.descricao_produto}</h3>
-                    <p class="codigo-barras">Código: ${produto.cod_barras}</p>
+                    <p class="codigo-barras">Código: ${codigoBarras}</p>
                     <a href="editar_produto.html?codigoBarras=${produto.cod_barras}" class="btn-editar">Editar</a>
                     <a href="#" class="btn-excluir" onclick="confirmarExclusao('${produto.cod_barras}')">Excluir</a>
                 `;

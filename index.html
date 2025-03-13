@@ -22,25 +22,24 @@
     </main>
 
     <script>
-        // Atualize a URL para a sua API online
-        const API_URL = "https://minha-api-produto.fly.dev/api"; 
+        const API_URL = "https://minha-api-produto.fly.dev/api"; // URL da API hospedada no Fly.io
 
         async function carregarProdutos() {
             const container = document.getElementById("productsContainer");
             let produtos = [];
 
             try {
-                // Fazendo a requisição para a API online
+                // Tenta buscar os produtos da API
                 const response = await fetch(`${API_URL}/produtos`);
                 if (!response.ok) throw new Error("API não disponível");
                 produtos = await response.json();
 
-                // Salva todos os produtos no localStorage para uso offline
+                // Salva os produtos no localStorage para uso offline
                 localStorage.setItem("produtos", JSON.stringify(produtos));
             } catch (error) {
                 console.error("Erro ao carregar produtos da API:", error);
 
-                // Carrega do LocalStorage caso a API esteja offline
+                // Carrega os produtos do LocalStorage caso a API não esteja disponível
                 const produtosSalvos = localStorage.getItem("produtos");
                 if (produtosSalvos) {
                     produtos = JSON.parse(produtosSalvos);
@@ -55,7 +54,7 @@
 
         function renderizarProdutos(produtos) {
             const container = document.getElementById("productsContainer");
-            container.innerHTML = ""; // Limpa antes de renderizar
+            container.innerHTML = ""; // Limpa o container antes de renderizar novos produtos
 
             if (produtos.length === 0) {
                 container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
@@ -89,10 +88,9 @@
             produtos = produtos.filter(produto => produto.cod_barras !== codigo);
             localStorage.setItem("produtos", JSON.stringify(produtos));
 
-            // Tenta excluir na API, mas mantém localmente caso não funcione
+            // Tenta excluir o produto da API
             try {
                 const response = await fetch(`${API_URL}/produto/${codigo}`, { method: "DELETE" });
-
                 if (response.ok) {
                     alert("Produto excluído com sucesso!");
                 } else {
@@ -130,7 +128,7 @@
             }
         });
 
-        window.onload = carregarProdutos; // Chama a função quando a página for carregada
+        window.onload = carregarProdutos; // Garantindo que a função seja chamada ao carregar a página
     </script>
 </body>
 </html>

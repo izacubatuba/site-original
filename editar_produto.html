@@ -41,6 +41,8 @@
     </main>
 
     <script>
+        const API_URL = "https://minha-api-produto.fly.dev/api"; // URL da API hospedada no Fly.io
+
         // Função para carregar o produto do LocalStorage
         function carregarProduto() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -83,8 +85,8 @@
             document.getElementById(produto.imagem ? "linkOption" : "uploadOption").checked = true;
         }
 
-        // Função para salvar as alterações do produto no LocalStorage
-        function salvarAlteracoes(event) {
+        // Função para salvar as alterações do produto no LocalStorage e na API
+        async function salvarAlteracoes(event) {
             event.preventDefault(); // Previne o comportamento padrão do formulário
 
             const descricao = document.getElementById("productName").value;
@@ -97,25 +99,41 @@
                 imagem: imagem || ""
             };
 
+            // Atualiza o produto no LocalStorage
             try {
-                // Carrega todos os produtos do LocalStorage
-                const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-
-                // Atualiza ou adiciona o produto
+                let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
                 const index = produtos.findIndex(prod => prod.cod_barras === codBarras);
                 if (index !== -1) {
                     produtos[index] = produtoAtualizado; // Atualiza o produto existente
                 } else {
                     produtos.push(produtoAtualizado); // Adiciona um novo produto
                 }
-
-                // Salva os produtos atualizados no LocalStorage
                 localStorage.setItem("produtos", JSON.stringify(produtos));
                 alert("Produto atualizado localmente!");
-                window.location.href = "index.html"; // Redireciona para a página inicial
-            } catch (e) {
-                console.error("Erro ao salvar no LocalStorage:", e);
-                alert("Erro ao salvar o produto. Tente novamente.");
+            } catch (error) {
+                console.error("Erro ao atualizar produto no LocalStorage:", error);
+                alert("Erro ao atualizar produto localmente.");
+            }
+
+            // Atualiza o produto na API (Fly.io)
+            try {
+                const response = await fetch(`${API_URL}/produto/${codBarras}`, {
+                    method: "PUT", // Método para atualização de dados
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(produtoAtualizado)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erro ao atualizar produto na API.");
+                }
+
+                alert("Produto atualizado na API!");
+                window.location.href = "index.html"; // Redireciona para a página inicial após salvar
+            } catch (error) {
+                console.error("Erro ao atualizar produto na API:", error);
+                alert("Erro ao atualizar produto na API. Alterações locais salvas.");
             }
         }
 

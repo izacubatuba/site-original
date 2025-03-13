@@ -3,7 +3,8 @@ async function carregarProdutos() {
     let produtos = [];
 
     try {
-        const response = await fetch(`${API_URL}/produtos`);
+        // Tenta buscar os produtos da API
+        const response = await fetch(`${API_URL}/produtos`);  // Requisição para listar os produtos da API
         if (!response.ok) throw new Error("API não disponível");
         produtos = await response.json();
 
@@ -17,7 +18,7 @@ async function carregarProdutos() {
     } catch (error) {
         console.error("Erro ao carregar produtos da API:", error);
 
-        // Carrega do LocalStorage se a API estiver offline
+        // Carrega os produtos do LocalStorage se a API estiver offline
         const produtosSalvos = localStorage.getItem("produtos");
         if (produtosSalvos) {
             produtos = JSON.parse(produtosSalvos);
@@ -27,5 +28,5 @@ async function carregarProdutos() {
         }
     }
 
-    renderizarProdutos(produtos);
+    renderizarProdutos(produtos);  // Função para renderizar os produtos na tela
 }

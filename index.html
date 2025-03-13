@@ -13,24 +13,30 @@
     </header>
 
     <main>
+        <!-- Campo de Pesquisa -->
         <input type="text" id="searchInput" placeholder="Pesquisar por nome ou código de barras...">
+        
         <div id="productsContainer">
+            <!-- Os produtos serão carregados dinamicamente via JavaScript -->
             <p>Carregando produtos...</p>
         </div>
     </main>
 
     <script>
-        const API_URL = "https://minha-api-produto.fly.dev/api";
+        // URL correta da API no Fly.io
+        const API_URL = "https://minha-api-produto.fly.dev/api";  // Substitua com a URL correta da sua API
 
+        // Função para carregar os produtos da API
         async function carregarProdutos() {
             const container = document.getElementById("productsContainer");
-            container.innerHTML = "<p>Carregando produtos...</p>";
+            container.innerHTML = "<p>Carregando produtos...</p>";  // Exibe mensagem enquanto carrega
 
             try {
                 const response = await fetch(`${API_URL}/produtos`);
                 if (!response.ok) throw new Error("Erro ao carregar produtos da API");
 
                 const produtos = await response.json();
+                console.log(produtos);  // Verifique o que está sendo retornado pela API no console
 
                 if (!Array.isArray(produtos)) throw new Error("Formato de resposta inválido");
 
@@ -51,9 +57,10 @@
             }
         }
 
+        // Função para renderizar os produtos no HTML
         function renderizarProdutos(produtos) {
             const container = document.getElementById("productsContainer");
-            container.innerHTML = ""; // Limpa antes de renderizar
+            container.innerHTML = "";  // Limpa antes de renderizar
 
             if (produtos.length === 0) {
                 container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
@@ -76,12 +83,14 @@
             });
         }
 
+        // Função de exclusão de produto
         function confirmarExclusao(codigo) {
             if (confirm("Tem certeza que deseja excluir este produto?")) {
                 excluirProduto(codigo);
             }
         }
 
+        // Função para excluir um produto
         async function excluirProduto(codigo) {
             let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
             produtos = produtos.filter(produto => produto.cod_barras !== codigo);
@@ -98,9 +107,10 @@
                 alert("Produto removido localmente. API indisponível.");
             }
 
-            carregarProdutos();
+            carregarProdutos();  // Atualiza a lista após exclusão
         }
 
+        // Função de busca de produtos por nome ou código de barras
         document.getElementById("searchInput").addEventListener("input", function () {
             const termoPesquisa = this.value.toLowerCase();
             const produtos = document.querySelectorAll(".product-card");
@@ -125,6 +135,7 @@
             }
         });
 
+        // Chama a função para carregar os produtos assim que a página carregar
         window.onload = carregarProdutos;
     </script>
 </body>

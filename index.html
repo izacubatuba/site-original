@@ -18,49 +18,44 @@
         
         <div id="productsContainer">
             <!-- Os produtos serão carregados dinamicamente via JavaScript -->
-            <p>Carregando produtos...</p>
         </div>
     </main>
 
     <script>
-        // URL correta da API no Fly.io
-        const API_URL = "https://minha-api-produto.fly.dev/api";  // Substitua com a URL correta da sua API
+        // Atualize a URL para a sua API online
+        const API_URL = "https://minha-api-produto.fly.dev/api"; 
 
-        // Função para carregar os produtos da API
         async function carregarProdutos() {
             const container = document.getElementById("productsContainer");
-            container.innerHTML = "<p>Carregando produtos...</p>";  // Exibe mensagem enquanto carrega
+            let produtos = [];
 
             try {
+                // Fazendo a requisição para a API online
                 const response = await fetch(`${API_URL}/produtos`);
-                if (!response.ok) throw new Error("Erro ao carregar produtos da API");
+                if (!response.ok) throw new Error("API não disponível");
+                produtos = await response.json();
 
-                const produtos = await response.json();
-                console.log(produtos);  // Verifique o que está sendo retornado pela API no console
-
-                if (!Array.isArray(produtos)) throw new Error("Formato de resposta inválido");
-
-                // Salva localmente para uso offline
+                // Salva todos os produtos no localStorage para uso offline
                 localStorage.setItem("produtos", JSON.stringify(produtos));
-
-                renderizarProdutos(produtos);
             } catch (error) {
-                console.error("Erro ao carregar produtos:", error);
+                console.error("Erro ao carregar produtos da API:", error);
 
-                // Carregar do LocalStorage se API estiver offline
+                // Carrega do LocalStorage caso a API esteja offline
                 const produtosSalvos = localStorage.getItem("produtos");
                 if (produtosSalvos) {
-                    renderizarProdutos(JSON.parse(produtosSalvos));
+                    produtos = JSON.parse(produtosSalvos);
                 } else {
                     container.innerHTML = "<p>Nenhum produto encontrado.</p>";
+                    return;
                 }
             }
+
+            renderizarProdutos(produtos);
         }
 
-        // Função para renderizar os produtos no HTML
         function renderizarProdutos(produtos) {
             const container = document.getElementById("productsContainer");
-            container.innerHTML = "";  // Limpa antes de renderizar
+            container.innerHTML = ""; // Limpa antes de renderizar
 
             if (produtos.length === 0) {
                 container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
@@ -83,34 +78,34 @@
             });
         }
 
-        // Função de exclusão de produto
         function confirmarExclusao(codigo) {
             if (confirm("Tem certeza que deseja excluir este produto?")) {
                 excluirProduto(codigo);
             }
         }
 
-        // Função para excluir um produto
         async function excluirProduto(codigo) {
             let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
             produtos = produtos.filter(produto => produto.cod_barras !== codigo);
             localStorage.setItem("produtos", JSON.stringify(produtos));
 
+            // Tenta excluir na API, mas mantém localmente caso não funcione
             try {
                 const response = await fetch(`${API_URL}/produto/${codigo}`, { method: "DELETE" });
 
-                if (!response.ok) throw new Error("Erro ao excluir produto na API");
-
-                alert("Produto excluído com sucesso!");
+                if (response.ok) {
+                    alert("Produto excluído com sucesso!");
+                } else {
+                    throw new Error("Erro ao excluir produto na API");
+                }
             } catch (error) {
                 console.error("Erro ao excluir produto:", error);
                 alert("Produto removido localmente. API indisponível.");
             }
 
-            carregarProdutos();  // Atualiza a lista após exclusão
+            carregarProdutos(); // Atualiza a lista após exclusão
         }
 
-        // Função de busca de produtos por nome ou código de barras
         document.getElementById("searchInput").addEventListener("input", function () {
             const termoPesquisa = this.value.toLowerCase();
             const produtos = document.querySelectorAll(".product-card");
@@ -135,8 +130,7 @@
             }
         });
 
-        // Chama a função para carregar os produtos assim que a página carregar
-        window.onload = carregarProdutos;
+        window.onload = carregarProdutos; // Chama a função quando a página for carregada
     </script>
 </body>
 </html>

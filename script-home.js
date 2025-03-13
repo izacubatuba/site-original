@@ -1,32 +1,159 @@
-async function carregarProdutos() {
-    const container = document.getElementById("productsContainer");
-    let produtos = [];
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Produto</title>
+    <link rel="stylesheet" href="cadastro-produto.css">
+</head>
+<body>
+    <header>
+        <h1>Editar Produto</h1>
+        <a href="index.html" class="btn voltar">Voltar para Produtos</a>
+    </header>
 
-    try {
-        // Tenta buscar os produtos da API
-        const response = await fetch(`${API_URL}/produtos`);  // Requisição para listar os produtos da API
-        if (!response.ok) throw new Error("API não disponível");
-        produtos = await response.json();
+    <main>
+        <!-- Mensagem de carregamento -->
+        <div id="loadingMessage" style="display: none; text-align: center; font-size: 20px; color: #000;">
+            Carregando produtos...
+        </div>
 
-        // Verifica se os produtos da API são diferentes dos do LocalStorage
-        const produtosSalvos = JSON.parse(localStorage.getItem("produtos")) || [];
-        if (JSON.stringify(produtosSalvos) !== JSON.stringify(produtos)) {
-            // Atualiza o LocalStorage com os produtos da API
-            localStorage.setItem("produtos", JSON.stringify(produtos));
-            alert("Todos os produtos foram salvos localmente. Agora você pode desligar a API.");
+        <form id="productForm">
+            <div class="form-group">
+                <label for="productName">Nome do Produto:</label>
+                <input type="text" id="productName" name="productName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productCode">Código de Barras:</label>
+                <input type="text" id="productCode" name="productCode" required readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="productImage">Imagem do Produto:</label>
+                <input type="file" id="productImage" name="productImage" accept="image/*">
+                <input type="text" id="productImageUrl" name="productImageUrl" placeholder="Ou insira o link da imagem">
+            </div>
+
+            <div class="form-group">
+                <label for="imageOption">Escolha o método para a imagem:</label>
+                <input type="radio" id="uploadOption" name="imageOption" value="upload" checked> Upload da Imagem
+                <input type="radio" id="linkOption" name="imageOption" value="link"> Inserir Link
+            </div>
+
+            <button type="submit" class="btn salvar">Salvar Alterações</button>
+        </form>
+    </main>
+
+    <script>
+        const API_URL = "https://minha-api-produto.fly.dev/api"; // URL da API hospedada no Fly.io
+
+        // Função para carregar o produto do LocalStorage
+        function carregarProduto() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codigoBarras = urlParams.get("codigoBarras");
+
+            if (!codigoBarras) {
+                alert("Código de barras não fornecido.");
+                return;
+            }
+
+            try {
+                console.log(`Buscando produto com código de barras: ${codigoBarras}`);
+
+                // Exibe a mensagem de "Carregando produtos..."
+                document.getElementById("loadingMessage").style.display = "block";
+
+                // Tenta buscar o produto no LocalStorage
+                const produtos = JSON.parse(localStorage.getItem("produtos"));
+
+                if (produtos) {
+                    const produto = produtos.find(prod => prod.cod_barras === codigoBarras);
+
+                    if (produto) {
+                        console.log("Produto carregado do LocalStorage:", produto);
+                        preencherFormulario(produto); // Preenche o formulário com os dados do LocalStorage
+                    } else {
+                        alert("Produto não encontrado no armazenamento local.");
+                    }
+                } else {
+                    alert("Nenhum produto encontrado no armazenamento local.");
+                }
+            } catch (error) {
+                console.error("Erro ao carregar produto do LocalStorage:", error);
+                alert("Erro ao carregar produto.");
+            } finally {
+                // Esconde a mensagem de carregamento após o processamento
+                document.getElementById("loadingMessage").style.display = "none";
+            }
         }
-    } catch (error) {
-        console.error("Erro ao carregar produtos da API:", error);
 
-        // Carrega os produtos do LocalStorage se a API estiver offline
-        const produtosSalvos = localStorage.getItem("produtos");
-        if (produtosSalvos) {
-            produtos = JSON.parse(produtosSalvos);
-        } else {
-            container.innerHTML = "<p>Nenhum produto encontrado.</p>";
-            return;
+        // Função para preencher o formulário com os dados do produto
+        function preencherFormulario(produto) {
+            console.log("Preenchendo formulário com os dados:", produto);
+            document.getElementById("productName").value = produto.descricao_produto;
+            document.getElementById("productCode").value = produto.cod_barras;
+            document.getElementById("productImageUrl").value = produto.imagem || "";
+            document.getElementById(produto.imagem ? "linkOption" : "uploadOption").checked = true;
         }
-    }
 
-    renderizarProdutos(produtos);  // Função para renderizar os produtos na tela
-}
+        // Função para salvar as alterações do produto no LocalStorage e na API
+        async function salvarAlteracoes(event) {
+            event.preventDefault(); // Previne o comportamento padrão do formulário
+
+            const descricao = document.getElementById("productName").value;
+            const codBarras = document.getElementById("productCode").value;
+            const imagem = document.getElementById("productImageUrl").value;
+
+            const produtoAtualizado = {
+                descricao_produto: descricao,
+                cod_barras: codBarras,
+                imagem: imagem || ""
+            };
+
+            // Atualiza o produto no LocalStorage
+            try {
+                let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+                const index = produtos.findIndex(prod => prod.cod_barras === codBarras);
+                if (index !== -1) {
+                    produtos[index] = produtoAtualizado; // Atualiza o produto existente
+                } else {
+                    produtos.push(produtoAtualizado); // Adiciona um novo produto
+                }
+                localStorage.setItem("produtos", JSON.stringify(produtos));
+                alert("Produto atualizado localmente!");
+            } catch (error) {
+                console.error("Erro ao atualizar produto no LocalStorage:", error);
+                alert("Erro ao atualizar produto localmente.");
+            }
+
+            // Atualiza o produto na API (Fly.io)
+            try {
+                const response = await fetch(`${API_URL}/produto/${codBarras}`, {
+                    method: "PUT", // Método para atualização de dados
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(produtoAtualizado)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erro ao atualizar produto na API.");
+                }
+
+                alert("Produto atualizado na API!");
+                window.location.href = "index.html"; // Redireciona para a página inicial após salvar
+            } catch (error) {
+                console.error("Erro ao atualizar produto na API:", error);
+                alert("Erro ao atualizar produto na API. Alterações locais salvas.");
+            }
+        }
+
+        // Chama a função para carregar o produto quando a página for carregada
+        document.addEventListener("DOMContentLoaded", carregarProduto);
+
+        // Adiciona o evento para salvar as alterações do formulário
+        document.getElementById("productForm").addEventListener("submit", salvarAlteracoes);
+    </script>
+</body>
+</html>

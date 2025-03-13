@@ -13,46 +13,44 @@
     </header>
 
     <main>
-        <!-- Campo de Pesquisa -->
         <input type="text" id="searchInput" placeholder="Pesquisar por nome ou código de barras...">
-        
         <div id="productsContainer">
-            <!-- Os produtos serão carregados dinamicamente via JavaScript -->
+            <p>Carregando produtos...</p>
         </div>
     </main>
 
     <script>
-        const API_URL = "https://minha-api-produto.fly.dev/api"; // Atualizado para sua API
+        const API_URL = "https://minha-api-produto.fly.dev";
 
-        // Função para carregar produtos da API e atualizar a tela
         async function carregarProdutos() {
             const container = document.getElementById("productsContainer");
-            let produtos = [];
+            container.innerHTML = "<p>Carregando produtos...</p>";
 
             try {
                 const response = await fetch(`${API_URL}/produtos`);
-                if (!response.ok) throw new Error("API não disponível");
-                produtos = await response.json();
+                if (!response.ok) throw new Error("Erro ao carregar produtos da API");
 
-                // Salva os produtos no localStorage para uso offline
+                const produtos = await response.json();
+
+                if (!Array.isArray(produtos)) throw new Error("Formato de resposta inválido");
+
+                // Salva localmente para uso offline
                 localStorage.setItem("produtos", JSON.stringify(produtos));
-            } catch (error) {
-                console.error("Erro ao carregar produtos da API:", error);
 
-                // Se a API estiver offline, carrega do localStorage
+                renderizarProdutos(produtos);
+            } catch (error) {
+                console.error("Erro ao carregar produtos:", error);
+
+                // Carregar do LocalStorage se API estiver offline
                 const produtosSalvos = localStorage.getItem("produtos");
                 if (produtosSalvos) {
-                    produtos = JSON.parse(produtosSalvos);
+                    renderizarProdutos(JSON.parse(produtosSalvos));
                 } else {
                     container.innerHTML = "<p>Nenhum produto encontrado.</p>";
-                    return;
                 }
             }
-
-            renderizarProdutos(produtos);
         }
 
-        // Renderiza os produtos na tela
         function renderizarProdutos(produtos) {
             const container = document.getElementById("productsContainer");
             container.innerHTML = ""; // Limpa antes de renderizar
@@ -78,37 +76,31 @@
             });
         }
 
-        // Confirmação antes de excluir um produto
         function confirmarExclusao(codigo) {
             if (confirm("Tem certeza que deseja excluir este produto?")) {
                 excluirProduto(codigo);
             }
         }
 
-        // Função para excluir um produto
         async function excluirProduto(codigo) {
             let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
             produtos = produtos.filter(produto => produto.cod_barras !== codigo);
             localStorage.setItem("produtos", JSON.stringify(produtos));
 
-            // Tenta excluir na API
             try {
                 const response = await fetch(`${API_URL}/produto/${codigo}`, { method: "DELETE" });
 
-                if (response.ok) {
-                    alert("Produto excluído com sucesso!");
-                } else {
-                    throw new Error("Erro ao excluir produto na API");
-                }
+                if (!response.ok) throw new Error("Erro ao excluir produto na API");
+
+                alert("Produto excluído com sucesso!");
             } catch (error) {
                 console.error("Erro ao excluir produto:", error);
                 alert("Produto removido localmente. API indisponível.");
             }
 
-            carregarProdutos(); // Atualiza a lista após exclusão
+            carregarProdutos();
         }
 
-        // Filtragem de produtos ao digitar na pesquisa
         document.getElementById("searchInput").addEventListener("input", function () {
             const termoPesquisa = this.value.toLowerCase();
             const produtos = document.querySelectorAll(".product-card");
@@ -133,14 +125,6 @@
             }
         });
 
-        // Atualiza a listagem de produtos automaticamente ao cadastrar um novo
-        window.addEventListener("storage", (event) => {
-            if (event.key === "produtos") {
-                carregarProdutos();
-            }
-        });
-
-        // Carrega os produtos ao abrir a página
         window.onload = carregarProdutos;
     </script>
 </body>

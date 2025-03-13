@@ -143,24 +143,54 @@ h1 {
 }
 
 /* Responsividade para telas menores */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     h1 {
         font-size: 22px;
     }
-    
+
+    /* Ajusta o botão para telas médias */
     .btn {
         padding: 10px 15px;
     }
 
+    /* Ajuste do cartão de produto para telas médias */
     .product-card {
         padding: 10px;
     }
 
+    /* Ajuste do título e código de barras no cartão para telas médias */
     .product-card h3 {
         font-size: 14px;
     }
 
     .codigo-barras {
         font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Ajusta o título na tela pequena */
+    h1 {
+        font-size: 20px;
+    }
+
+    /* Ajusta o campo de pesquisa */
+    #searchInput {
+        width: 85%;
+        padding: 10px;
+    }
+
+    /* Ajustes nos cartões para uma tela muito pequena */
+    .product-card {
+        padding: 8px;
+    }
+
+    /* Tamanho do título e código de barras no cartão em tela muito pequena */
+    .product-card h3 {
+        font-size: 13px;
+    }
+
+    .codigo-barras {
+        font-size: 11px;
     }
 }

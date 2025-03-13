@@ -28,6 +28,11 @@
             const container = document.getElementById("productsContainer");
             let produtos = [];
 
+            // Cria a mensagem de carregamento e a exibe
+            const loadingMessage = document.createElement("div");
+            loadingMessage.innerHTML = "Carregando produtos...";
+            container.appendChild(loadingMessage);
+
             try {
                 // Tenta buscar os produtos da API
                 const response = await fetch(`${API_URL}/produtos`);
@@ -48,6 +53,9 @@
                     return;
                 }
             }
+
+            // Após os produtos serem carregados, remove a mensagem de carregamento
+            loadingMessage.style.display = "none";
 
             renderizarProdutos(produtos);
         }

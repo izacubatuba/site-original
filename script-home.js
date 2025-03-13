@@ -1,5 +1,8 @@
 async function carregarProdutos() {
     const container = document.getElementById("productsContainer");
+    const loadingMessage = document.createElement("div");
+    loadingMessage.innerHTML = "Carregando produtos...";
+    container.appendChild(loadingMessage);  // Adiciona a mensagem ao container
     let produtos = [];
 
     try {
@@ -28,5 +31,8 @@ async function carregarProdutos() {
         }
     }
 
+    // Após os produtos serem carregados, remove a mensagem de carregamento
+    loadingMessage.style.display = "none";
+    
     renderizarProdutos(produtos);  // Função para renderizar os produtos na tela
 }

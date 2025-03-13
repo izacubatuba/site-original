@@ -1,45 +1,55 @@
-function salvarProduto(event) {
-    event.preventDefault(); // Previne o envio do formulário
+const API_URL = "https://minha-api-produto.fly.dev/api/produtos"; // A URL correta para a API
 
-    const nome = document.getElementById('productName').value;
-    const codigoBarras = document.getElementById('productCode').value;
-    
-    // Verifica qual opção de imagem foi escolhida
-    let imagem = '';
-    const imageOption = document.querySelector('input[name="imageOption"]:checked') ? document.querySelector('input[name="imageOption"]:checked').value : '';
+async function salvarProduto(event) {
+    event.preventDefault(); // Previne o comportamento padrão do formulário
 
-    if (imageOption === 'upload') {
-        const imagemFile = document.getElementById('productImage').files[0];
-        if (imagemFile) {
-            imagem = URL.createObjectURL(imagemFile); // Cria uma URL temporária para o arquivo
-        }
-    } else if (imageOption === 'link') {
-        imagem = document.getElementById('productImageUrl').value; // Obtém o link da imagem
+    const descricao = document.getElementById("productName").value;
+    const codBarras = document.getElementById("productCode").value;
+    const categoria = document.getElementById("productCategory").value;
+    const imagem = document.getElementById("productImageUrl").value || document.getElementById("productImage").files[0];
+
+    if (!descricao || !codBarras || !categoria) {
+        alert("Todos os campos são obrigatórios!");
+        return;
     }
 
-    // Verifica se o produto já foi cadastrado
-    const produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-    const produtoExistente = produtos.find(produto => produto.codigoBarras === codigoBarras);
+    const novoProduto = {
+        descricao_produto: descricao,
+        cod_barras: codBarras,
+        categoria: categoria,
+        imagem: imagem ? imagem : null
+    };
 
-    if (produtoExistente) {
-        alert("Este produto já foi cadastrado com esse código de barras!");
-    } else {
-        // Cria o novo produto
-        const novoProduto = {
-            nome: nome,
-            codigoBarras: codigoBarras,
-            imagem: imagem || 'imagem_default.jpg' // Se não for fornecida uma imagem, usa uma imagem padrão
-        };
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST", // Método para criar um novo produto
+            headers: {
+                "Content-Type": "application/json", // Definindo o tipo como JSON
+            },
+            body: JSON.stringify(novoProduto), // Enviando os dados no formato JSON
+        });
 
-        // Adiciona o novo produto ao array
-        produtos.push(novoProduto);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Erro ao salvar o produto na API:", errorText);
+            alert(`Erro ao salvar o produto: ${errorText}`);
+            return;
+        }
 
-        // Salva novamente no localStorage
-        localStorage.setItem('produtos', JSON.stringify(produtos));
+        // Exibe a mensagem de sucesso na tela
+        const messageElement = document.getElementById("message");
+        messageElement.textContent = "Produto cadastrado com sucesso!";
+        messageElement.style.display = "block";
 
-        alert("Produto cadastrado com sucesso!");
-        
-        // Recarrega a lista de produtos na página de listagem
-        window.location.href = 'index.html'; // Redireciona para a página de produtos
+        // Após 2 segundos, redireciona para a página inicial
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 2000);
+
+    } catch (error) {
+        console.error("Erro ao salvar produto na API:", error);
+        alert("Erro ao salvar produto. Verifique o console para mais detalhes.");
     }
 }
+
+document.getElementById("productForm").addEventListener("submit", salvarProduto);

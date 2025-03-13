@@ -25,6 +25,20 @@
             </div>
 
             <div class="form-group">
+                <label for="productCategory">Categoria do Produto:</label>
+                <select id="productCategory" name="productCategory" required>
+                    <option value="">Selecione a categoria</option>
+                    <option value="Alimentos">Alimentos</option>
+                    <option value="Higiene Pessoal e Beleza">Higiene Pessoal e Beleza</option>
+                    <option value="Carnes e Peixes">Carnes e Peixes</option>
+                    <option value="Produtos de Panificação">Produtos de Panificação</option>
+                    <option value="Mercearia">Mercearia</option>
+                    <option value="Produtos para Animais">Produtos para Animais</option>
+                    <option value="Vinhos, Bebidas Alcoólicas e Cervejas">Vinhos, Bebidas Alcoólicas e Cervejas</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="productImage">Imagem do Produto:</label>
                 <input type="file" id="productImage" name="productImage" accept="image/*">
                 <input type="text" id="productImageUrl" name="productImageUrl" placeholder="Ou insira o link da imagem">
@@ -82,6 +96,7 @@
             document.getElementById("productName").value = produto.descricao_produto;
             document.getElementById("productCode").value = produto.cod_barras;
             document.getElementById("productImageUrl").value = produto.imagem || "";
+            document.getElementById("productCategory").value = produto.categoria || ""; // Preenche a categoria
             document.getElementById(produto.imagem ? "linkOption" : "uploadOption").checked = true;
         }
 
@@ -92,11 +107,13 @@
             const descricao = document.getElementById("productName").value;
             const codBarras = document.getElementById("productCode").value;
             const imagem = document.getElementById("productImageUrl").value;
+            const categoria = document.getElementById("productCategory").value;
 
             const produtoAtualizado = {
                 descricao_produto: descricao,
                 cod_barras: codBarras,
-                imagem: imagem || ""
+                imagem: imagem || "",
+                categoria: categoria || "" // Salva a categoria
             };
 
             // Atualiza o produto no LocalStorage

@@ -25,6 +25,20 @@
             </div>
 
             <div class="form-group">
+                <label for="productCategory">Categoria do Produto:</label>
+                <select id="productCategory" name="productCategory" required>
+                    <option value="">Selecione a categoria</option>
+                    <option value="Alimentos">Alimentos</option>
+                    <option value="Higiene Pessoal e Beleza">Higiene Pessoal e Beleza</option>
+                    <option value="Carnes e Peixes">Carnes e Peixes</option>
+                    <option value="Produtos de Panificação">Produtos de Panificação</option>
+                    <option value="Mercearia">Mercearia</option>
+                    <option value="Produtos para Animais">Produtos para Animais</option>
+                    <option value="Vinhos, Bebidas Alcoólicas e Cervejas">Vinhos, Bebidas Alcoólicas e Cervejas</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="imageOption">Escolha a Imagem:</label><br>
                 <input type="radio" id="uploadOption" name="imageOption" value="upload" checked> 
                 <label for="uploadOption">Fazer upload da imagem</label><br>
@@ -40,6 +54,9 @@
 
             <button type="submit" class="btn salvar">Salvar Produto</button>
         </form>
+
+        <!-- Adicionando o elemento de mensagem de sucesso -->
+        <div id="message" style="display:none; color: green;"></div>
     </main>
 
     <script src="cadastro-produto.js"></script>

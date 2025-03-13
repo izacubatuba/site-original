@@ -16,6 +16,18 @@
         <!-- Campo de Pesquisa -->
         <input type="text" id="searchInput" placeholder="Pesquisar por nome ou código de barras...">
         
+        <!-- Filtro de Categoria -->
+        <select id="categoriaSelect">
+            <option value="">Selecione a categoria</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Higiene Pessoal e Beleza">Higiene Pessoal e Beleza</option>
+            <option value="Carnes e Peixes">Carnes e Peixes</option>
+            <option value="Produtos de Panificação">Produtos de Panificação</option>
+            <option value="Mercearia">Mercearia</option>
+            <option value="Produtos para Animais">Produtos para Animais</option>
+            <option value="Vinhos, Bebidas Alcoólicas e Cervejas">Vinhos, Bebidas Alcoólicas e Cervejas</option>
+        </select>
+
         <div id="productsContainer">
             <!-- Os produtos serão carregados dinamicamente via JavaScript -->
         </div>
@@ -69,7 +81,16 @@
                 return;
             }
 
-            produtos.forEach(produto => {
+            // Filtrando produtos pela categoria selecionada
+            const categoriaFiltro = document.getElementById("categoriaSelect").value;
+            const produtosFiltrados = categoriaFiltro ? produtos.filter(produto => produto.categoria === categoriaFiltro) : produtos;
+
+            if (produtosFiltrados.length === 0) {
+                container.innerHTML = `<p>Nenhum produto encontrado na categoria "${categoriaFiltro}".</p>`;
+                return;
+            }
+
+            produtosFiltrados.forEach(produto => {
                 const card = document.createElement("div");
                 card.classList.add("product-card");
 
@@ -112,6 +133,7 @@
             carregarProdutos(); // Atualiza a lista após exclusão
         }
 
+        // Função para pesquisar produtos com base no nome ou código de barras
         document.getElementById("searchInput").addEventListener("input", function () {
             const termoPesquisa = this.value.toLowerCase();
             const produtos = document.querySelectorAll(".product-card");
@@ -136,7 +158,13 @@
             }
         });
 
+        // Carregar produtos ao iniciar
         window.onload = carregarProdutos; // Garantindo que a função seja chamada ao carregar a página
+
+        // Atualizar lista de produtos sempre que a categoria for alterada
+        document.getElementById("categoriaSelect").addEventListener("change", function () {
+            carregarProdutos();
+        });
     </script>
 </body>
 </html>

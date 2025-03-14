@@ -19,6 +19,7 @@ function iniciarEscaneamento() {
     }, function(err) {
         if (err) {
             console.log(err);
+            alert("Erro ao iniciar o scanner.");
             return;
         }
         console.log("Quagga iniciado!");
@@ -34,9 +35,14 @@ function iniciarEscaneamento() {
 
         scanning = true; // Marca como lendo para evitar leituras duplicadas
 
-        const codBarras = result.codeResult.code;
-        document.getElementById("productCode").value = codBarras; // Preenche o campo do código de barras com o valor escaneado
-        console.log("Código de barras detectado:", codBarras);
+        // Verifica se o código de barras foi detectado corretamente
+        if (result && result.codeResult && result.codeResult.code) {
+            const codBarras = result.codeResult.code;
+            document.getElementById("productCode").value = codBarras; // Preenche o campo do código de barras com o valor escaneado
+            console.log("Código de barras detectado:", codBarras);
+        } else {
+            console.log("Código de barras não detectado corretamente.");
+        }
 
         // Após a leitura, o scanner é interrompido para evitar leituras múltiplas
         Quagga.stop();

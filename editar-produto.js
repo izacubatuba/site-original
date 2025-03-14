@@ -4,59 +4,39 @@ function carregarProduto() {
     const codigoBarras = urlParams.get("codigoBarras");
 
     if (codigoBarras) {
-        // Tenta carregar da API
         fetch(`http://127.0.0.1:5000/api/produto/${codigoBarras}`)
             .then(response => {
                 if (!response.ok) throw new Error("Produto não encontrado na API");
                 return response.json();
             })
             .then(produto => {
-                console.log("Produto carregado com sucesso:", produto); // Log para verificar o produto retornado
-                
-                // Preenche os campos de texto com as informações do produto
                 document.getElementById("productName").value = produto.descricao_produto;
                 document.getElementById("productCode").value = produto.cod_barras;
-
-                // Preenche a imagem, se existir
+                
                 if (produto.imagem) {
                     document.getElementById("productImageUrl").value = produto.imagem;
                     document.getElementById("linkOption").checked = true;
                 } else {
                     document.getElementById("uploadOption").checked = true;
                 }
-
-                // Salva o produto carregado no LocalStorage para fallback
-                localStorage.setItem("produto_editando", JSON.stringify(produto));
             })
             .catch(error => {
                 console.error("Erro ao carregar o produto:", error);
-
-                // Tenta carregar do LocalStorage como fallback
-                const produtoLocal = localStorage.getItem("produto_editando");
-                if (produtoLocal) {
-                    const produto = JSON.parse(produtoLocal);
-                    document.getElementById("productName").value = produto.descricao_produto;
-                    document.getElementById("productCode").value = produto.cod_barras;
-                    document.getElementById("productImageUrl").value = produto.imagem || "";
-                    document.getElementById("linkOption").checked = !!produto.imagem;
-                } else {
-                    alert("Produto não encontrado!");
-                    window.location.href = "index.html"; // Redireciona caso o produto não seja encontrado
-                }
+                alert("Produto não encontrado!");
+                window.location.href = "index.html";
             });
     } else {
         alert("Código de barras não fornecido.");
-        window.location.href = "index.html"; // Redireciona se o código de barras não for fornecido
+        window.location.href = "index.html";
     }
 }
 
-// Função para salvar as alterações no produto na API e LocalStorage
+// Função para salvar as alterações no produto na API
 function salvarAlteracoes(event) {
-    event.preventDefault(); // Evita que o formulário seja enviado de forma tradicional
+    event.preventDefault();
 
     const nome = document.getElementById("productName").value;
     const codigoBarras = document.getElementById("productCode").value;
-
     let imagem = "";
     const imageOption = document.querySelector('input[name="imageOption"]:checked').value;
 
@@ -65,7 +45,7 @@ function salvarAlteracoes(event) {
         if (imagemFile) {
             const reader = new FileReader();
             reader.onload = function (e) {
-                imagem = e.target.result; // Salva a imagem como base64
+                imagem = e.target.result;
                 atualizarProduto(codigoBarras, nome, imagem);
             };
             reader.readAsDataURL(imagemFile);
@@ -78,18 +58,14 @@ function salvarAlteracoes(event) {
     }
 }
 
-// Função para atualizar o produto na API e no LocalStorage
+// Função para atualizar o produto na API
 function atualizarProduto(codigoBarras, nome, imagem) {
-    let produtoOriginal = JSON.parse(localStorage.getItem("produto_editando")) || {};
-
-    // Criando objeto com os dados atualizados
     const produtoAtualizado = {
         descricao_produto: nome,
         cod_barras: codigoBarras,
-        imagem: imagem || produtoOriginal.imagem,
+        imagem: imagem || "",
     };
 
-    // Atualiza o produto na API
     fetch(`http://127.0.0.1:5000/api/produto/${codigoBarras}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -101,34 +77,12 @@ function atualizarProduto(codigoBarras, nome, imagem) {
             alert("Erro ao atualizar o produto: " + data.erro);
         } else {
             alert("Produto alterado com sucesso!");
-
-            // Atualiza o produto no LocalStorage
-            const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-            const index = produtos.findIndex(p => p.cod_barras === codigoBarras);
-
-            if (index !== -1) {
-                produtos[index] = produtoAtualizado;
-                localStorage.setItem("produtos", JSON.stringify(produtos));
-            }
-
-            localStorage.removeItem("produto_editando");
-            window.location.href = "index.html"; // Redireciona após salvar
+            window.location.href = "index.html";
         }
     })
     .catch(error => {
-        console.warn("Erro ao atualizar na API, salvando no LocalStorage.");
-
-        // Se a API falhar, atualiza apenas no LocalStorage
-        const produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-        const index = produtos.findIndex(p => p.cod_barras === codigoBarras);
-
-        if (index !== -1) {
-            produtos[index] = produtoAtualizado;
-            localStorage.setItem("produtos", JSON.stringify(produtos));
-        }
-
-        alert("Produto atualizado localmente, mas a API não respondeu.");
-        window.location.href = "index.html"; // Redireciona para garantir atualização
+        console.error("Erro ao atualizar produto na API:", error);
+        alert("Erro ao atualizar o produto. Tente novamente mais tarde.");
     });
 }
 

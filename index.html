@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Produtos Cadastrados</h1>
+        <a href="cadastro_produto.html" class="btn">Cadastrar Novo Produto</a>
+    </header>
+
+    <main>
+        <!-- Campo de Pesquisa -->
+        <input type="text" id="searchInput" placeholder="Pesquisar por nome ou código de barras...">
+        
+        <!-- Filtro de Categoria -->
+        <select id="categoriaSelect">
+            <option value="">Selecione a categoria</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Higiene Pessoal e Beleza">Higiene Pessoal e Beleza</option>
+            <option value="Carnes e Peixes">Carnes e Peixes</option>
+            <option value="Produtos de Panificação">Produtos de Panificação</option>
+            <option value="Mercearia">Mercearia</option>
+            <option value="Produtos para Animais">Produtos para Animais</option>
+            <option value="Vinhos, Bebidas Alcoólicas e Cervejas">Vinhos, Bebidas Alcoólicas e Cervejas</option>
+        </select>
+
+        <div id="productsContainer">
+            <!-- Os produtos serão carregados dinamicamente via JavaScript -->
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "https://minha-api-produto.fly.dev/api"; // URL da API hospedada no Fly.io
+
+        async function carregarProdutos() {
+            const container = document.getElementById("productsContainer");
+            let produtos = [];
+
+            // Cria a mensagem de carregamento e a exibe
+            const loadingMessage = document.createElement("div");
+            loadingMessage.innerHTML = "Carregando produtos...";
+            container.appendChild(loadingMessage);
+
+            try {
+                // Tenta buscar os produtos da API
+                const response = await fetch(`${API_URL}/produtos`);
+                if (!response.ok) throw new Error("API não disponível");
+                produtos = await response.json();
+
+                // Salva os produtos no localStorage para uso offline
+                localStorage.setItem("produtos", JSON.stringify(produtos));
+            } catch (error) {
+                console.error("Erro ao carregar produtos da API:", error);
+
+                // Carrega os produtos do LocalStorage caso a API não esteja disponível
+                const produtosSalvos = localStorage.getItem("produtos");
+                if (produtosSalvos) {
+                    produtos = JSON.parse(produtosSalvos);
+                } else {
+                    container.innerHTML = "<p>Nenhum produto encontrado.</p>";
+                    return;
+                }
+            }
+
+            // Após os produtos serem carregados, remove a mensagem de carregamento
+            loadingMessage.style.display = "none";
+
+            renderizarProdutos(produtos);
+        }
+
+        function renderizarProdutos(produtos) {
+            const container = document.getElementById("productsContainer");
+            container.innerHTML = ""; // Limpa o container antes de renderizar novos produtos
+
+            if (produtos.length === 0) {
+                container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
+                return;
+            }
+
+            // Filtrando produtos pela categoria selecionada
+            const categoriaFiltro = document.getElementById("categoriaSelect").value;
+            const produtosFiltrados = categoriaFiltro ? produtos.filter(produto => produto.categoria === categoriaFiltro) : produtos;
+
+            if (produtosFiltrados.length === 0) {
+                container.innerHTML = `<p>Nenhum produto encontrado na categoria "${categoriaFiltro}".</p>`;
+                return;
+            }
+
+            produtosFiltrados.forEach(produto => {
+                const card = document.createElement("div");
+                card.classList.add("product-card");
+
+                // Formatar código de barras para remover ponto flutuante
+                const codigoBarras = produto.cod_barras.toString().split('.')[0]; // Remove a parte decimal, se houver
+
+                card.innerHTML = `
+                    <img src="${produto.imagem || 'placeholder.jpg'}" alt="${produto.descricao_produto}">
+                    <h3>${produto.descricao_produto}</h3>
+                    <p class="codigo-barras">Código: ${codigoBarras}</p>
+                    <a href="editar_produto.html?codigoBarras=${produto.cod_barras}" class="btn-editar">Editar</a>
+                    <a href="#" class="btn-excluir" onclick="confirmarExclusao('${produto.cod_barras}')">Excluir</a>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function confirmarExclusao(codigo) {
+            if (confirm("Tem certeza que deseja excluir este produto?")) {
+                excluirProduto(codigo);
+            }
+        }
+
+        async function excluirProduto(codigo) {
+            let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+            produtos = produtos.filter(produto => produto.cod_barras !== codigo);
+            localStorage.setItem("produtos", JSON.stringify(produtos));
+
+            // Tenta excluir o produto da API
+            try {
+                const response = await fetch(`${API_URL}/produto/${codigo}`, { method: "DELETE" });
+                if (response.ok) {
+                    alert("Produto excluído com sucesso!");
+                } else {
+                    throw new Error("Erro ao excluir produto na API");
+                }
+            } catch (error) {
+                console.error("Erro ao excluir produto:", error);
+                alert("Produto removido localmente. API indisponível.");
+            }
+
+            carregarProdutos(); // Atualiza a lista após exclusão
+        }
+
+        // Função para pesquisar produtos com base no nome ou código de barras
+        document.getElementById("searchInput").addEventListener("input", function () {
+            const termoPesquisa = this.value.toLowerCase();
+            const produtos = document.querySelectorAll(".product-card");
+
+            let produtosVisiveis = 0;
+
+            produtos.forEach(produto => {
+                const nomeProduto = produto.querySelector("h3").textContent.toLowerCase();
+                const codigoBarras = produto.querySelector(".codigo-barras").textContent.toLowerCase();
+
+                if (nomeProduto.includes(termoPesquisa) || codigoBarras.includes(termoPesquisa)) {
+                    produto.style.display = "block";
+                    produtosVisiveis++;
+                } else {
+                    produto.style.display = "none";
+                }
+            });
+
+            const container = document.getElementById("productsContainer");
+            if (produtosVisiveis === 0) {
+                container.innerHTML = "<p>Nenhum produto encontrado.</p>";
+            }
+        });
+
+        // Carregar produtos ao iniciar
+        window.onload = carregarProdutos; // Garantindo que a função seja chamada ao carregar a página
+
+        // Atualizar lista de produtos sempre que a categoria for alterada
+        document.getElementById("categoriaSelect").addEventListener("change", function () {
+            carregarProdutos();
+        });
+    </script>
+</body>
+</html>

@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastrar Produto</title>
     <link rel="stylesheet" href="cadastro-produto.css">
+
+    <!-- Adicionando a biblioteca QuaggaJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 </head>
 <body>
     <header>
@@ -21,7 +24,10 @@
 
             <div class="form-group">
                 <label for="productCode">Código de Barras:</label>
-                <input type="text" id="productCode" name="productCode" required>
+                <div class="input-with-button">
+                    <input type="text" id="productCode" name="productCode" required>
+                    <button type="button" id="scanBarcode" class="btn">Escanear</button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -55,10 +61,142 @@
             <button type="submit" class="btn salvar">Salvar Produto</button>
         </form>
 
-        <!-- Adicionando o elemento de mensagem de sucesso -->
-        <div id="message" style="display:none; color: green;"></div>
+        <div id="message" style="display:none;"></div>
+
+        <!-- Área para exibir a câmera -->
+        <div id="camera" style="display: none;"></div>
     </main>
 
-    <script src="cadastro-produto.js"></script>
+    <script>
+        // Obter o formulário e os elementos de imagem
+        const form = document.getElementById("productForm");
+        const uploadOption = document.getElementById("uploadOption");
+        const linkOption = document.getElementById("linkOption");
+        const imageInputSection = document.getElementById("imageInputSection");
+        const productImageUrl = document.getElementById("productImageUrl");
+
+        // Exibir ou ocultar o campo de URL de imagem conforme a opção selecionada
+        uploadOption.addEventListener("change", function () {
+            imageInputSection.querySelector('input[type="file"]').style.display = "block";
+            productImageUrl.style.display = "none";
+        });
+
+        linkOption.addEventListener("change", function () {
+            imageInputSection.querySelector('input[type="file"]').style.display = "none";
+            productImageUrl.style.display = "block";
+        });
+
+        // Função para verificar se o código de barras já existe
+        function checkProductExists(codigoBarras) {
+            return fetch(`https://minha-api-produto.fly.dev/api/produtos/${codigoBarras}`)
+                .then(response => response.json())
+                .then(data => data && data.cod_barras === codigoBarras)
+                .catch(() => false); // Caso haja erro na consulta
+        }
+
+        // Função para lidar com o envio do formulário
+        form.addEventListener("submit", function (event) {
+            event.preventDefault(); // Impedir o envio tradicional do formulário
+
+            const productName = document.getElementById("productName").value;
+            const productCode = document.getElementById("productCode").value;
+            const productCategory = document.getElementById("productCategory").value;
+
+            let productImage = "";
+            const imageOption = document.querySelector('input[name="imageOption"]:checked').value;
+            if (imageOption === "upload") {
+                const fileInput = document.getElementById("productImage");
+                if (fileInput.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onloadend = function () {
+                        productImage = reader.result;
+                        checkProductExistsAndSave();
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    alert("Por favor, faça o upload da imagem.");
+                }
+            } else {
+                productImage = productImageUrl.value;
+                checkProductExistsAndSave();
+            }
+
+            // Função para verificar se o produto já existe e enviar os dados
+            function checkProductExistsAndSave() {
+                checkProductExists(productCode).then(exists => {
+                    const messageElement = document.getElementById("message");
+                    if (exists) {
+                        messageElement.style.display = "block";
+                        messageElement.textContent = "Produto com esse código de barras já cadastrado.";
+                        messageElement.style.color = "red";
+                    } else {
+                        const produto = {
+                            descricao_produto: productName,
+                            cod_barras: productCode,
+                            categoria: productCategory,
+                            imagem: productImage
+                        };
+
+                        fetch("https://minha-api-produto.fly.dev/api/produtos", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(produto)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.mensagem) {
+                                messageElement.style.display = "block";
+                                messageElement.textContent = data.mensagem;
+                                messageElement.style.color = "green";
+                                form.reset();
+                            } else {
+                                messageElement.style.display = "block";
+                                messageElement.textContent = "Erro ao salvar o produto.";
+                                messageElement.style.color = "red";
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Erro ao salvar o produto:", error);
+                            alert("Erro ao salvar o produto. Tente novamente.");
+                        });
+                    }
+                });
+            }
+        });
+
+        // Função para escanear o código de barras
+        document.getElementById("scanBarcode").addEventListener("click", function() {
+            document.getElementById("productForm").style.display = "none";
+            document.getElementById("camera").style.display = "block";
+
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.getElementById("camera")
+                },
+                decoder: {
+                    readers: ["code_128_reader", "ean_reader", "ean_8_reader", "upc_reader", "code_39_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function(result) {
+                const barcode = result.codeResult.code;
+                document.getElementById("productCode").value = barcode;
+
+                Quagga.stop();
+                document.getElementById("camera").style.display = "none";
+                document.getElementById("productForm").style.display = "block";
+            });
+        });
+    </script>
 </body>
 </html>

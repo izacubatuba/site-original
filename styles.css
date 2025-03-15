@@ -48,27 +48,6 @@ h1 {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Botão de escanear código de barras */
-#scanBarcode {
-    display: inline-block;
-    padding: 12px 20px;
-    background-color: #17a2b8;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    margin-top: 20px;
-}
-
-#scanBarcode:hover {
-    background-color: #138496;
-    transform: scale(1.05);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
 /* Campo de pesquisa */
 #searchInput {
     width: 90%;
@@ -182,10 +161,6 @@ h1 {
     }
 
     .btn {
-        padding: 10px 15px;
-    }
-
-    #scanBarcode {
         padding: 10px 15px;
     }
 

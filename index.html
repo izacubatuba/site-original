@@ -51,19 +51,12 @@
                 if (!response.ok) throw new Error("API não disponível");
                 produtos = await response.json();
 
-                // Salva os produtos no localStorage para uso offline
-                localStorage.setItem("produtos", JSON.stringify(produtos));
             } catch (error) {
                 console.error("Erro ao carregar produtos da API:", error);
 
-                // Carrega os produtos do LocalStorage caso a API não esteja disponível
-                const produtosSalvos = localStorage.getItem("produtos");
-                if (produtosSalvos) {
-                    produtos = JSON.parse(produtosSalvos);
-                } else {
-                    container.innerHTML = "<p>Nenhum produto encontrado.</p>";
-                    return;
-                }
+                // Exibe uma mensagem de erro caso a API esteja indisponível
+                container.innerHTML = "<p>Erro ao carregar produtos. API indisponível.</p>";
+                return;
             }
 
             // Após os produtos serem carregados, remove a mensagem de carregamento
@@ -116,24 +109,19 @@
         }
 
         async function excluirProduto(codigo) {
-            let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
-            produtos = produtos.filter(produto => produto.cod_barras !== codigo);
-            localStorage.setItem("produtos", JSON.stringify(produtos));
-
             // Tenta excluir o produto da API
             try {
                 const response = await fetch(`${API_URL}/produto/${codigo}`, { method: "DELETE" });
                 if (response.ok) {
                     alert("Produto excluído com sucesso!");
+                    carregarProdutos(); // Atualiza a lista após exclusão
                 } else {
                     throw new Error("Erro ao excluir produto na API");
                 }
             } catch (error) {
                 console.error("Erro ao excluir produto:", error);
-                alert("Produto removido localmente. API indisponível.");
+                alert("Erro ao tentar excluir produto.");
             }
-
-            carregarProdutos(); // Atualiza a lista após exclusão
         }
 
         // Função para pesquisar produtos com base no nome ou código de barras
